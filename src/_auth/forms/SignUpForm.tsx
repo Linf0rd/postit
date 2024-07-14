@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form"
 import { SignUpValidation } from "@/lib/validation"
 import { z } from "zod"
 import Loader from "@/components/shared/Loader"
-import { useCreateUserAccount } from "@/lib/react-query/queriesAndMutations"
+import { useCreateUserAccount, useSignInAccount } from "@/lib/react-query/queriesAndMutations"
 
 
 const SignUpForm = () => {
@@ -20,7 +20,7 @@ const SignUpForm = () => {
   
   const { mutateAsync: createUserAccount, isLoading: isCreatingUser } = useCreateUserAccount();
 
-  
+  const { mutateAsync: signInAccount, isLoading: isSigningIn } = useSignInAccount();
 
   const form = useForm<z.infer<typeof SignUpValidation>>({
     resolver: zodResolver(SignUpValidation),
@@ -38,11 +38,22 @@ const SignUpForm = () => {
 
     if (!newUser) {
       return toast({
-        title: "We almost have you in! Your signup didn't go through this time, but give it another shot☺."
+        title: "We almost have you in! Your sign up didn't go through this time, but give it another shot☺."
       })
     }
 
-    // const session = await signInAccount()
+    const session = await signInAccount({
+      email: values.email,
+      password: values.password,
+    })
+
+    if (!session) {
+      return toast({
+        title: "We almost have you in! Your sign in didn't go through this time, but give it another shot☺."
+      })
+    }
+
+    
   }
 
 
