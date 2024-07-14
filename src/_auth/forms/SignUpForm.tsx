@@ -5,17 +5,22 @@ import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
 import { SignUpValidation } from "@/lib/validation"
 import { z } from "zod"
 import Loader from "@/components/shared/Loader"
-import { createUserAccount } from "@/lib/appwrite/api"
+import { useCreateUserAccount } from "@/lib/react-query/queriesAndMutations"
 
 
 const SignUpForm = () => {
-  const isLoading = false;
+  const { toast } = useToast();
+  
+  const { mutateAsync: createUserAccount, isLoading: isCreatingUser } = useCreateUserAccount();
+
+  
 
   const form = useForm<z.infer<typeof SignUpValidation>>({
     resolver: zodResolver(SignUpValidation),
@@ -27,10 +32,17 @@ const SignUpForm = () => {
     },
   })
 
+
   async function onSubmit(values: z.infer<typeof SignUpValidation>) {
     const newUser = await createUserAccount(values);
 
-    console.log(newUser);
+    if (!newUser) {
+      return toast({
+        title: "We almost have you in! Your signup didn't go through this time, but give it another shot☺."
+      })
+    }
+
+    // const session = await signInAccount()
   }
 
 
@@ -98,11 +110,11 @@ const SignUpForm = () => {
             )}
           />
           <Button type="submit" className="shad-button_primary">
-            {isLoading ? (
+            {isCreatingUser ? (
               <div className="flex-center gap-2">
                 <Loader /> Loading...
               </div>
-            ) : "Sign Up" }
+            ) : "Sign Up"}
           </Button>
 
           <p className="text-small-regular text-light-2 text-center mt-2">
@@ -112,7 +124,7 @@ const SignUpForm = () => {
         </form>
       </div>
     </Form>
-  )
+  );
 }
 
 export default SignUpForm
