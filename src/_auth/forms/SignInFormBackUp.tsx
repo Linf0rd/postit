@@ -33,21 +33,30 @@ const SignInForm = () => {
 
 
   async function onSubmit(values: z.infer<typeof SignInValidation>) {
+
     const session = await signInAccount({
       email: values.email,
       password: values.password,
-    });
+    })
 
-    console.log({ session });
+    console.log({ session })
 
     if (!session) {
       return toast({
         title: "We almost have you in! Your sign in didn't go through this time, but give it another shot☺."
-      });
+      })
     }
 
-    await checkAuthUser();
-    navigate("/");
+    const isLoggedIn = await checkAuthUser();
+
+    if (!isLoggedIn) {
+      form.reset();
+      navigate("/");
+    } else {
+      return toast({
+        title: "We almost have you in! Your sign in didn't go through this time, but give it another shot☺."
+      })
+    }
   }
 
 
