@@ -1,8 +1,8 @@
 import { Models } from "appwrite";
 
 // import { useToast } from "@/components/ui/use-toast";
-// import { Loader, PostCard, UserCard } from "@/components/shared";
-import { useGetRecentPosts, useGetUsers } from "@/lib/react-query/queriesAndMutations";
+import { Loader, PostCard, UserCard } from "@/components/shared";
+import { useGetRecentPosts, useGetUsers } from "@/lib/react-query/queries";
 
 const Home = () => {
   // const { toast } = useToast();
@@ -22,10 +22,10 @@ const Home = () => {
     return (
       <div className="flex flex-1">
         <div className="home-container">
-          <p className="body-medium text-light-1">Something bad happened</p>
+          <p className="body-medium text-light-1">Something bad happened.</p>
         </div>
         <div className="home-creators">
-          <p className="body-medium text-light-1">Something bad happened</p>
+          <p className="body-medium text-light-1">Something bad happened.</p>
         </div>
       </div>
     );

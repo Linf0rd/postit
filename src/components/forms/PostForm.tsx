@@ -1,36 +1,35 @@
 import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input";
-import { Textarea } from "../ui/textarea";
-import FileUploader from "../shared/FileUploader";
-import { PostValidation } from "@/lib/validation";
 import { Models } from "appwrite";
-import { useUserContext } from "@/context/AuthContext";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "../ui/use-toast";
-import { useCreatePost } from "@/lib/react-query/queriesAndMutations";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-})
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Button,
+  Input,
+  Textarea,
+} from "@/components/ui";
+import { PostValidation } from "@/lib/validation";
+import { useToast } from "@/components/ui/use-toast";
+import { useUserContext } from "@/context/AuthContext";
+import { FileUploader, Loader } from "@/components/shared";
+import { useCreatePost, useUpdatePost } from "@/lib/react-query/queries";
 
 type PostFormProps = {
   post?: Models.Document;
   action: "Create" | "Update";
 };
 
-const PostForm = ({ post }: PostFormProps) => {
+const PostForm = ({ post, action }: PostFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useUserContext();
-
   const form = useForm<z.infer<typeof PostValidation>>({
     resolver: zodResolver(PostValidation),
     defaultValues: {
@@ -39,15 +38,34 @@ const PostForm = ({ post }: PostFormProps) => {
       location: post ? post.location : "",
       tags: post ? post.tags.join(",") : "",
     },
-  })
+  });
 
+  // Query
   const { mutateAsync: createPost, isLoading: isLoadingCreate } =
     useCreatePost();
   const { mutateAsync: updatePost, isLoading: isLoadingUpdate } =
     useUpdatePost();
 
-  // 2. Define a submit handler.
+  // Handler
   const handleSubmit = async (value: z.infer<typeof PostValidation>) => {
+    // ACTION = UPDATE
+    if (post && action === "Update") {
+      const updatedPost = await updatePost({
+        ...value,
+        postId: post.$id,
+        imageId: post.imageId,
+        imageUrl: post.imageUrl,
+      });
+
+      if (!updatedPost) {
+        toast({
+          title: `${action} post failed. Please try again.`,
+        });
+      }
+      return navigate(`/posts/${post.$id}`);
+    }
+
+    // ACTION = CREATE
     const newPost = await createPost({
       ...value,
       userId: user.id,
@@ -63,7 +81,8 @@ const PostForm = ({ post }: PostFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
         className="flex flex-col gap-9 w-full  max-w-5xl">
         <FormField
           control={form.control}
@@ -133,22 +152,25 @@ const PostForm = ({ post }: PostFormProps) => {
             </FormItem>
           )}
         />
+
         <div className="flex gap-4 items-center justify-end">
           <Button
             type="button"
             className="shad-button_dark_4"
-          >
+            onClick={() => navigate(-1)}>
             Cancel
           </Button>
           <Button
             type="submit"
-            className="shad-button_primary whitespace-nowrap">
-            Post
+            className="shad-button_primary whitespace-nowrap"
+            disabled={isLoadingCreate || isLoadingUpdate}>
+            {(isLoadingCreate || isLoadingUpdate) && <Loader />}
+            {action} Post
           </Button>
         </div>
       </form>
-    </Form >
-  )
-}
+    </Form>
+  );
+};
 
-export default PostForm
+export default PostForm;
